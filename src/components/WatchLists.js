@@ -134,6 +134,7 @@ const WatchLists = () => {
   return (
     <>
        <div className="mt-4 p-4 border rounded shadow bg-light">
+        WatchList
       {error && <p className="text-danger">{error}</p>}
       <table className="table table-bordered border-none table-responsive">
         <thead className="table-primary">

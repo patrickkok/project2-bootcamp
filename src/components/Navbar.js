@@ -44,6 +44,8 @@ const Navbar = ({ toggleDarkMode, darkMode }) => {
             </Link>
             <Link className="nav-link text-white" to="/settings">
               Settings
+            </Link>            <Link className="nav-link text-white" to="/addaccountdata">
+              Investment
             </Link>
           </Nav>
           {pathname.includes("/dash") && (

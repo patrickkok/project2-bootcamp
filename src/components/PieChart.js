@@ -1,73 +1,99 @@
 import React, { useEffect, useState } from "react";
 import ReactApexChart from "react-apexcharts";
-import axios from "axios";
+import { ref as databaseRef, get, child, onValue } from "firebase/database";
+import { database } from "../firebase";
+import { off } from "firebase/database";
 
 const PieChart = () => {
-  const [chartData] = useState({
-    series1: [33, 27, 40],
-    options: {
-      chart: {
-        width: 380,
-        type: "pie",
-      },
-      labels: ["invesment", "cash", "Portfolio"],
-      responsive: [
-        {
-          breakpoint: 480,
-          options: {
-            chart: {
-              width: 400,
-            },
-            legend: {
-              position: "bottom",
-            },
-          },
-        },
-      ],
-    },
+  const [accountData, setAccountData] = useState({
+    amountInvested: 0,
+    cash: 0,
+    portfolioValue: 0,
   });
-  // const [companyname, setCompanyName] = useState("apple");
-  async function getyahhochartdata() {
-    const options = {
-      method: "GET",
-      url: "https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v3/get-chart",
-      params: {
-        interval: "1mo",
-        symbol: "AMRN",
-        range: "5y",
-        region: "US",
-        includePrePost: "false",
-        useYfid: "true",
-        includeAdjustedClose: "true",
-        events: "capitalGain,div,split",
-      },
-      headers: {
-        "X-RapidAPI-Key": "d6da08cc1fmsh2ffc0e825183be8p1c8245jsn3ba9199a4d47",
-        "X-RapidAPI-Host": "apidojo-yahoo-finance-v1.p.rapidapi.com",
-      },
+
+  useEffect(() => {
+    // Fetch account data from Firebase
+    const accountDataRef = databaseRef(database, "accountData");
+
+    const fetchData = async () => {
+      try {
+        const snapshot = await get(child(accountDataRef, "latest"));
+        if (snapshot.exists()) {
+          setAccountData(snapshot.val());
+        } else {
+          console.log("No data available");
+        }
+      } catch (error) {
+        console.error("Error getting account data:", error);
+      }
     };
 
-    try {
-      const response = await axios.request(options);
-      console.log(response?.data?.chart?.result[0].meta);
-      console.log(response?.data?.chart?.result[0]?.timestamp);
-    } catch (error) {
-      console.error(error);
-    }
-  }
+    fetchData();
+
+    // Listen for changes and update the state accordingly
+    const onDataChange = (snapshot) => {
+      if (snapshot.exists()) {
+        setAccountData(snapshot.val());
+      } else {
+        console.log("No data available");
+      }
+    };
+
+    const dataRef = child(accountDataRef, "latest");
+    onValue(dataRef, onDataChange);
+
+    return () => {
+      // Cleanup the event listener when the component unmounts
+      off(dataRef, onDataChange);
+    };
+  }, []); // Empty dependency array ensures this effect runs once when the component mounts
+
+  // Initialize chartData inside useEffect
+  const [chartData, setChartData] = useState({ series1: [], options: {} });
+
   useEffect(() => {
-    getyahhochartdata();
-  }, []);
+    // Convert string values to numbers
+    const amountInvested = parseFloat(accountData?.amountInvested) || 0;
+    const cash = parseFloat(accountData?.cash) || 0;
+    const portfolioValue = parseFloat(accountData?.portfolioValue) || 0;
+
+    // Set chart data after fetching account data
+    setChartData({
+      series1: [amountInvested, cash, portfolioValue],
+      options: {
+        chart: {
+          width: 380,
+          type: "pie",
+        },
+        labels: ["Investment", "Cash", "Portfolio"],
+        responsive: [
+          {
+            breakpoint: 480,
+            options: {
+              chart: {
+                width: 400,
+              },
+              legend: {
+                position: "bottom",
+              },
+            },
+          },
+        ],
+      },
+    });
+  }, [accountData]);
+
+
   return (
-    <div id="chart" >
-    <ReactApexChart
-      options={chartData.options}
-      series={chartData.series1}
-      className="mt-4 p-3 border rounded shadow bg-light mx-2"
-      type="pie"
-      width={480}
-    />
-  </div>
+    <div id="chart">
+      <ReactApexChart
+        options={chartData.options}
+        series={chartData.series1}
+        className="mt-4 p-3 border rounded shadow bg-light mx-2"
+        type="pie"
+        width={480}
+      />
+    </div>
   );
 };
 

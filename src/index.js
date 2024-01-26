@@ -17,6 +17,7 @@ import "./App.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { ThemeProvider } from "./components/ThemeContext";
 import AddStock from "./pages/AddStock.js"
+import UpdateAccountData from "./pages/UpdateAccountData.js";
 
 
 const router = createBrowserRouter([
@@ -32,6 +33,7 @@ const router = createBrowserRouter([
   { path: "/addstock", element: <AddStock /> },
   { path: "/insights", element: <Insights /> },
   { path: "/settings", element: <Settings /> },
+  { path: "/addaccountdata", element: <UpdateAccountData /> },
 ]);
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
